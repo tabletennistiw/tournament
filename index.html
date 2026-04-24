@@ -29,7 +29,8 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.08e
 #admin-btn:hover{border-color:var(--admin);color:var(--admin);}
 #admin-btn.on{border-color:var(--admin);color:var(--admin);background:rgba(201,160,220,.1);}
 .admin-btn-label{display:none;}
-@media(min-width:480px){.admin-btn-label{display:inline;}}
+@media(min-width:480px){.admin-btn-label{display:inline;}header{padding:1.1rem 1.75rem;}header h1{font-size:2.6rem;}main{padding:1.5rem 1.75rem;}}
+@media(min-width:640px){header{padding:1.2rem 2rem;}header h1{font-size:3rem;}nav{padding:0 2rem;}main{padding:1.75rem 2rem;}}
 
 /* LIVE SIGNAL */
 .lb-signal{display:flex;align-items:center;gap:.35rem;cursor:default;}
@@ -487,6 +488,10 @@ import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-ap
 import{getFirestore,collection,doc,addDoc,setDoc,updateDoc,deleteDoc,getDoc,getDocs,onSnapshot,query,orderBy,serverTimestamp,runTransaction}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const app=initializeApp(FIREBASE_CONFIG);
 const db=getFirestore(app);
+
+const mq=window.matchMedia('(min-width:520px)');
+const toggleSub=()=>document.getElementById('header-sub-text').style.display=mq.matches?'block':'none';
+mq.addEventListener('change',toggleSub); toggleSub();
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let players=[],matches=[],isAdmin=false;
