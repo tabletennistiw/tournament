@@ -229,6 +229,7 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
   <button class="active" onclick="showPanel('leaderboard',this)">Leaderboard</button>
   <button onclick="showPanel('matches',this)">Matches</button>
   <button onclick="showPanel('brackets',this)">Tournaments</button>
+  <button id="admin-tab-btn" onclick="showPanel('admin',this)" style="display:none;color:var(--admin)">★ Admin</button>
 </nav>
 
 <main>
@@ -297,12 +298,64 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
     <div style="width:100%">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.08em;color:var(--text)">Active Tournaments</div>
-        <button class="btn" onclick="openNewBracketModal()">+ New Tournament</button>
+        <div id="tourn-header-btn"></div>
+      </div>
+      <!-- Countdown banner -->
+      <div id="tourn-countdown-banner" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2rem 1rem;text-align:center;margin-bottom:1.25rem;">
+        <div style="font-size:2rem;margin-bottom:.4rem">🔒</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Tournament Bracket Starts In</div>
+        <div id="tourn-countdown-timer" style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:.06em;color:var(--accent);line-height:1"></div>
+        <div id="tourn-countdown-name" style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--muted);margin-top:.5rem;letter-spacing:.06em"></div>
       </div>
       <div id="brackets-list"><div class="empty">No active tournaments. Create one to get started.</div></div>
       <div style="margin-top:2.5rem;border-top:1px solid var(--border);padding-top:1.75rem">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.08em;color:var(--text);margin-bottom:1.25rem">Past Tournaments</div>
         <div id="past-tournaments-list"><div class="empty">No completed tournaments yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="panel-admin" class="panel">
+    <div style="max-width:520px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.08em;color:var(--admin);margin-bottom:1.5rem">Admin Settings</div>
+
+      <div class="admin-section">
+        <div class="admin-stitle">Tournament Deadline</div>
+        <div class="form-card" style="border-color:rgba(229,178,93,.3)">
+          <p style="font-family:'DM Mono',monospace;font-size:.63rem;color:var(--muted);margin-bottom:.9rem;line-height:1.6">Set a deadline. When it hits, the top N players by points are automatically seeded into a double elimination bracket. Non-admins see a locked countdown until then.</p>
+          <div class="field"><label>Tournament Name</label><input type="text" id="tourn-name-input" placeholder="e.g. TTTIW Championship"></div>
+          <div class="field"><label>Deadline</label><input type="datetime-local" id="tourn-deadline-input"></div>
+          <div class="field"><label>Top N Players (4–16)</label><input type="number" id="tourn-top-n" value="8" min="4" max="16" step="1" style="width:100px"></div>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+            <button class="btn" onclick="saveTournDeadline()">Save Deadline</button>
+            <button class="btn-ghost" onclick="clearTournDeadline()" style="font-size:.62rem">Clear</button>
+            <button class="btn-admin" onclick="fireAutoTournament()" style="font-size:.62rem">⚡ Create Now</button>
+          </div>
+          <div class="msg" id="tourn-deadline-msg"></div>
+          <div id="tourn-deadline-status" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:.75rem;line-height:1.8;display:none"></div>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-stitle">Scoring Rules</div>
+        <div class="form-card" style="border-color:rgba(201,160,220,.25)">
+          <div class="field"><label>Win Points</label><input type="number" id="scoring-win" min="0" step="1" value="500"></div>
+          <div class="field"><label>Loss Points</label><input type="number" id="scoring-loss" min="0" step="1" value="300"></div>
+          <div class="field"><label>Streak Bonus per win</label><input type="number" id="scoring-streak" min="0" step="1" value="50">
+            <div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--muted);margin-top:.35rem;line-height:1.6">e.g. 500 → 550 → 600 on consecutive wins. Set 0 to disable.</div>
+          </div>
+          <button class="btn-admin" onclick="saveScoring()">Save Scoring Rules</button>
+          <div class="msg" id="scoring-msg" style="margin-top:.65rem"></div>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-stitle">Danger Zone</div>
+        <div class="form-card" style="border-color:rgba(217,83,79,.3)">
+          <p style="font-family:'DM Mono',monospace;font-size:.63rem;color:var(--muted);margin-bottom:.9rem;line-height:1.6">Permanently delete a player or match from the database. Points are <strong style="color:var(--loss)">not</strong> automatically reverted when deleting matches.</p>
+          <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted)">Use the Edit/Del buttons on the Players list in the Matches tab, or the Delete button on match rows.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -483,14 +536,19 @@ function showMsg(id,text,isErr=false){
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
 try{if(localStorage.getItem('tournament_admin')==='1')isAdmin=true;}catch(e){}
 
+function _setAdminState(on){
+  isAdmin=on;
+  document.getElementById('admin-btn').classList.toggle('on',on);
+  document.getElementById('admin-btn-label').textContent=on?' Logout':' Admin';
+  document.getElementById('scoring-settings-card').classList.toggle('visible',on);
+  const tab=document.getElementById('admin-tab-btn');if(tab)tab.style.display=on?'':'none';
+  _updateTournHeaderBtn();
+  renderPlayersList();renderHistory();renderBrackets();renderPastTournaments();
+}
 window.openAdminLogin=function(){
   if(isAdmin){
-    isAdmin=false;
     try{localStorage.removeItem('tournament_admin');}catch(e){}
-    document.getElementById('admin-btn').classList.remove('on');
-    document.getElementById('admin-btn-label').textContent=' Admin';
-    document.getElementById('scoring-settings-card').classList.remove('visible');
-    renderPlayersList();renderHistory();renderBrackets();renderPastTournaments();
+    _setAdminState(false);
     return;
   }
   document.getElementById('admin-pw').value='';
@@ -500,13 +558,9 @@ window.openAdminLogin=function(){
 };
 window.submitAdminLogin=function(){
   if(document.getElementById('admin-pw').value===ADMIN_PW){
-    isAdmin=true;
     try{localStorage.setItem('tournament_admin','1');}catch(e){}
     document.getElementById('admin-login-overlay').classList.remove('open');
-    document.getElementById('admin-btn').classList.add('on');
-    document.getElementById('admin-btn-label').textContent=' Logout';
-    document.getElementById('scoring-settings-card').classList.add('visible');
-    renderPlayersList();renderHistory();renderBrackets();renderPastTournaments();
+    _setAdminState(true);
   }else{
     const m=document.getElementById('admin-login-msg');
     m.textContent='Incorrect password.';m.className='msg err';m.style.display='block';
@@ -521,6 +575,7 @@ window.showPanel=function(id,btn){
   btn.classList.add('active');
   if(id==='matches'){renderHistory();renderPlayersList();}
   if(id==='brackets'){renderBrackets();renderPastTournaments();}
+  if(id==='admin'){renderAdminPanel();}
 };
 
 // ─── LEADERBOARD ─────────────────────────────────────────────────────────────
@@ -998,33 +1053,73 @@ function renderBrWorld(bi){
   const world=document.getElementById('br-world-'+bi);if(!world)return;
   world.innerHTML='';
   const wc=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#E5B25D';
+  const LC='#ff6b35';
   const PAD=20,doL=b.format==='double';
   const doPI=b.piRound.length>0,doLPI=doL&&(b.lPiRound||[]).length>0&&b.extras>0;
-  const piX=doPI?PAD:PAD;const wX=doPI?piX+BR_COL:PAD;const lX=wX;
-  const wTop=PAD+30,wH=b.wRounds[0]?.matches.length*BR_VGAP||0;
-  const LSEP=28,lTop=wTop+wH+LSEP;
-  const lpiX=doLPI?PAD:wX;
-  const wn0=b.wRounds[0]?.matches.length||0;const ln0=b.lRounds[0]?.matches.length||0;
-  function lCY(li,mi){const lBottom=lTop;const strideRi=Math.floor(li/2)+1;return lBottom+brCY(strideRi,mi);}
+  // X layout: play-in col, then winners bracket columns, losers starts at same X as winners (stacked below)
+  const piX=PAD;
+  const wX=doPI?piX+BR_COL:PAD;
+  const lpiX=wX; // L play-in aligns under W round 1
+  const lX=doLPI?lpiX+BR_COL:wX; // losers rounds start after L play-in col (or same as wX)
+  // Y layout: winners on top, big separator, losers below
+  const LSEP=56; // generous gap between winners bottom and losers top
+  const LABEL_H=36; // space for section label above first card
+  const wTop=PAD+LABEL_H;
+  const wn0=b.wRounds[0]?.matches.length||0;
+  const wH=wn0*BR_VGAP;
+  // Separator sits in the middle of the gap
+  const sepY=wTop+wH+LSEP/2;
+  const lTop=wTop+wH+LSEP; // losers section top (first card y-origin)
+  const ln0=b.lRounds[0]?.matches.length||0;
+  function lCY(li,mi){const strideRi=Math.floor(li/2)+1;return lTop+brCY(strideRi,mi);}
   function drawFork(x1,cy1,cy2,midY,cy3,x2,mx,bc){brDrawPoly([[x1,cy1],[mx,cy1],[mx,midY]],bc,bi);brDrawPoly([[x1,cy2],[mx,cy2],[mx,midY]],bc,bi);brDrawPoly([[mx,midY],[mx,cy3],[x2,cy3]],bc,bi);}
   function drawWSection(rounds,startX){
     const bc=hexA(wc,.27);
-    rounds.forEach((rnd,ri)=>{const colX=startX+ri*BR_COL;const lbl=brEl('div',{position:'absolute',left:colX+'px',top:(wTop-22)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:wc,userSelect:'none',pointerEvents:'none'});lbl.textContent=rnd.label;world.appendChild(lbl);rnd.matches.forEach((m,mi)=>brDrawCard(m,colX,wTop+brCY(ri,mi)-BR_CH/2,rnd.label,false,wc,bi));if(ri<rounds.length-1){const x1=colX+BR_CW,x2=colX+BR_COL,mx=(x1+x2)/2,nm=rnd.matches.length;for(let mi=0;mi<nm;mi+=2){const cy1=wTop+brCY(ri,mi),cy2=mi+1<nm?wTop+brCY(ri,mi+1):cy1,cy3=wTop+brCY(ri+1,mi>>1),midY=(cy1+cy2)/2;drawFork(x1,cy1,cy2,midY,cy3,x2,mx,bc);}}});
+    rounds.forEach((rnd,ri)=>{
+      const colX=startX+ri*BR_COL;
+      const lbl=brEl('div',{position:'absolute',left:colX+'px',top:(wTop-20)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:wc,userSelect:'none',pointerEvents:'none'});
+      lbl.textContent=rnd.label;world.appendChild(lbl);
+      rnd.matches.forEach((m,mi)=>brDrawCard(m,colX,wTop+brCY(ri,mi)-BR_CH/2,rnd.label,false,wc,bi));
+      if(ri<rounds.length-1){const x1=colX+BR_CW,x2=colX+BR_COL,mx=(x1+x2)/2,nm=rnd.matches.length;for(let mi=0;mi<nm;mi+=2){const cy1=wTop+brCY(ri,mi),cy2=mi+1<nm?wTop+brCY(ri,mi+1):cy1,cy3=wTop+brCY(ri+1,mi>>1),midY=(cy1+cy2)/2;drawFork(x1,cy1,cy2,midY,cy3,x2,mx,bc);}}
+    });
     return startX+rounds.length*BR_COL;
   }
   function drawLSection(rounds,startX){
-    const wc2='#ff6b35',bc='rgba(255,107,53,.22)';
-    rounds.forEach((rnd,li)=>{const colX=startX+li*BR_COL;const isSurvive=li%2===0;const lbl=brEl('div',{position:'absolute',left:colX+'px',top:(lTop-22)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:wc2,userSelect:'none',pointerEvents:'none'});lbl.textContent=rnd.label;world.appendChild(lbl);rnd.matches.forEach((m,mi)=>brDrawCard(m,colX,lCY(li,mi)-BR_CH/2,rnd.label,true,wc2,bi));if(li<rounds.length-1){const x1=colX+BR_CW,x2=colX+BR_COL,mx=(x1+x2)/2,nm=rnd.matches.length;if(isSurvive){for(let mi=0;mi<nm;mi++){const cy1=lCY(li,mi),cy2=lCY(li+1,mi);brDrawPoly([[x1,cy1],[mx,cy1],[mx,cy2],[x2,cy2]],bc,bi);}}else{for(let mi=0;mi<nm;mi+=2){const cy1=lCY(li,mi),cy2=mi+1<nm?lCY(li,mi+1):cy1,cy3=lCY(li+1,mi>>1),midY=(cy1+cy2)/2;drawFork(x1,cy1,cy2,midY,cy3,x2,mx,bc);}}}});
+    const bc='rgba(255,107,53,.22)';
+    rounds.forEach((rnd,li)=>{
+      const colX=startX+li*BR_COL;const isSurvive=li%2===0;
+      const lbl=brEl('div',{position:'absolute',left:colX+'px',top:(lTop-20)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:LC,userSelect:'none',pointerEvents:'none'});
+      lbl.textContent=rnd.label;world.appendChild(lbl);
+      rnd.matches.forEach((m,mi)=>brDrawCard(m,colX,lCY(li,mi)-BR_CH/2,rnd.label,true,LC,bi));
+      if(li<rounds.length-1){const x1=colX+BR_CW,x2=colX+BR_COL,mx=(x1+x2)/2,nm=rnd.matches.length;
+        if(isSurvive){for(let mi=0;mi<nm;mi++){const cy1=lCY(li,mi),cy2=lCY(li+1,mi);brDrawPoly([[x1,cy1],[mx,cy1],[mx,cy2],[x2,cy2]],bc,bi);}}
+        else{for(let mi=0;mi<nm;mi+=2){const cy1=lCY(li,mi),cy2=mi+1<nm?lCY(li,mi+1):cy1,cy3=lCY(li+1,mi>>1),midY=(cy1+cy2)/2;drawFork(x1,cy1,cy2,midY,cy3,x2,mx,bc);}}}
+    });
     return startX+rounds.length*BR_COL;
   }
-  if(doPI){b.piRound.forEach((pm,pmi)=>{const lbl=brEl('div',{position:'absolute',left:piX+'px',top:(wTop-22)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:wc,userSelect:'none',pointerEvents:'none'});lbl.textContent='Play-In';world.appendChild(lbl);const r1=b.wRounds[0];let r1mi=-1;for(let i=0;i<r1.matches.length;i++){const rm=r1.matches[i];if(rm.s1===pm.s1||rm.s1===pm.s2||rm.s2===pm.s1||rm.s2===pm.s2){r1mi=i;break;}}const piCY=wTop+brCY(0,r1mi>=0?r1mi:pmi);brDrawCard(pm,piX,piCY-BR_CH/2,'W Play-In',false,wc,bi);if(r1mi>=0){const x1=piX+BR_CW,x2=wX,mx=(x1+x2)/2;const r1m=r1.matches[r1mi];const side=(r1m.s1===pm.s1||r1m.s1===pm.s2)?0:1;const slotCY=wTop+brCY(0,r1mi)-BR_CH/2+(side===0?BR_SH/2:BR_SH+2+BR_SH/2);brDrawPoly([[x1,piCY],[mx,piCY],[mx,slotCY],[x2,slotCY]],hexA(wc,.2),bi);}});}
-  if(doL){const tag=brEl('div',{position:'absolute',left:wX+'px',top:(wTop-36)+'px',fontSize:'.4rem',letterSpacing:'.16em',textTransform:'uppercase',color:wc,background:hexA(wc,.07),border:'1px solid '+hexA(wc,.2),padding:'2px 8px',borderRadius:'2px',userSelect:'none',pointerEvents:'none'});tag.textContent='Winners Bracket';world.appendChild(tag);}
+  // Play-in
+  if(doPI){b.piRound.forEach((pm,pmi)=>{const lbl=brEl('div',{position:'absolute',left:piX+'px',top:(wTop-20)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:wc,userSelect:'none',pointerEvents:'none'});lbl.textContent='Play-In';world.appendChild(lbl);const r1=b.wRounds[0];let r1mi=-1;for(let i=0;i<r1.matches.length;i++){const rm=r1.matches[i];if(rm.s1===pm.s1||rm.s1===pm.s2||rm.s2===pm.s1||rm.s2===pm.s2){r1mi=i;break;}}const piCY=wTop+brCY(0,r1mi>=0?r1mi:pmi);brDrawCard(pm,piX,piCY-BR_CH/2,'W Play-In',false,wc,bi);if(r1mi>=0){const x1=piX+BR_CW,x2=wX,mx=(x1+x2)/2;const r1m=r1.matches[r1mi];const side=(r1m.s1===pm.s1||r1m.s1===pm.s2)?0:1;const slotCY=wTop+brCY(0,r1mi)-BR_CH/2+(side===0?BR_SH/2:BR_SH+2+BR_SH/2);brDrawPoly([[x1,piCY],[mx,piCY],[mx,slotCY],[x2,slotCY]],hexA(wc,.2),bi);}});}
+  // Winners bracket section label tag
+  if(doL){
+    const tag=brEl('div',{position:'absolute',left:wX+'px',top:(wTop-LABEL_H)+'px',fontSize:'.4rem',letterSpacing:'.16em',textTransform:'uppercase',color:wc,background:hexA(wc,.07),border:'1px solid '+hexA(wc,.2),padding:'2px 8px',borderRadius:'2px',userSelect:'none',pointerEvents:'none'});
+    tag.textContent='Winners Bracket';world.appendChild(tag);
+  }
   const wEndX=drawWSection(b.wRounds,wX);
-  if(doL){world.appendChild(brEl('div',{position:'absolute',left:PAD+'px',top:(wTop+wH+LSEP/2)+'px',width:'3000px',height:'1px',background:'repeating-linear-gradient(90deg,rgba(255,107,53,.25) 0,rgba(255,107,53,.25) 6px,transparent 6px,transparent 12px)',pointerEvents:'none'}));}
-  if(doLPI){const extras=b.extras||0;const lpiLbl=brEl('div',{position:'absolute',left:lpiX+'px',top:(lTop-22)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:'#ff6b35',userSelect:'none',pointerEvents:'none'});lpiLbl.textContent='L Play-In';world.appendChild(lpiLbl);const x1=lpiX+BR_CW,x2=lX,mx=(x1+x2)/2;const bc='rgba(255,107,53,.18)';for(let slot=0;slot<wn0;slot+=2){const lpiIdxA=slot,lpiIdxB=slot+1;const hasA=lpiIdxA<extras,hasB=lpiIdxB<extras;if(!hasA&&!hasB)continue;const cyA=lTop+brCY(0,slot),cyB=lTop+brCY(0,slot+1);const targetLr1Mi=Math.floor(slot/2);const lr1CY=targetLr1Mi<ln0?lCY(0,targetLr1Mi):null;if(hasA&&hasB){brDrawCard(b.lPiRound[lpiIdxA],lpiX,cyA-BR_CH/2,'L Play-In',true,'#ff6b35',bi);brDrawCard(b.lPiRound[lpiIdxB],lpiX,cyB-BR_CH/2,'L Play-In',true,'#ff6b35',bi);if(lr1CY!=null){const midY=(cyA+cyB)/2;drawFork(x1,cyA,cyB,midY,lr1CY,x2,mx,bc);}}else if(hasA){brDrawCard(b.lPiRound[lpiIdxA],lpiX,cyA-BR_CH/2,'L Play-In',true,'#ff6b35',bi);if(lr1CY!=null)brDrawPoly([[x1,cyA],[mx,cyA],[mx,lr1CY],[x2,lr1CY]],bc,bi);}else{brDrawCard(b.lPiRound[lpiIdxB],lpiX,cyB-BR_CH/2,'L Play-In',true,'#ff6b35',bi);if(lr1CY!=null)brDrawPoly([[x1,cyB],[mx,cyB],[mx,lr1CY],[x2,lr1CY]],bc,bi);}}}
+  // Separator line between winners and losers
+  if(doL){
+    world.appendChild(brEl('div',{position:'absolute',left:'0px',top:sepY+'px',width:'5000px',height:'1px',background:'repeating-linear-gradient(90deg,rgba(255,107,53,.3) 0,rgba(255,107,53,.3) 6px,transparent 6px,transparent 12px)',pointerEvents:'none'}));
+  }
+  // L Play-in
+  if(doLPI){const extras=b.extras||0;const lpiLbl=brEl('div',{position:'absolute',left:lpiX+'px',top:(lTop-20)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:LC,userSelect:'none',pointerEvents:'none'});lpiLbl.textContent='L Play-In';world.appendChild(lpiLbl);const x1=lpiX+BR_CW,x2=lX,mx=(x1+x2)/2;const bc='rgba(255,107,53,.18)';for(let slot=0;slot<wn0;slot+=2){const lpiIdxA=slot,lpiIdxB=slot+1;const hasA=lpiIdxA<extras,hasB=lpiIdxB<extras;if(!hasA&&!hasB)continue;const cyA=lTop+brCY(0,slot),cyB=lTop+brCY(0,slot+1);const targetLr1Mi=Math.floor(slot/2);const lr1CY=targetLr1Mi<ln0?lCY(0,targetLr1Mi):null;if(hasA&&hasB){brDrawCard(b.lPiRound[lpiIdxA],lpiX,cyA-BR_CH/2,'L Play-In',true,LC,bi);brDrawCard(b.lPiRound[lpiIdxB],lpiX,cyB-BR_CH/2,'L Play-In',true,LC,bi);if(lr1CY!=null){const midY=(cyA+cyB)/2;drawFork(x1,cyA,cyB,midY,lr1CY,x2,mx,bc);}}else if(hasA){brDrawCard(b.lPiRound[lpiIdxA],lpiX,cyA-BR_CH/2,'L Play-In',true,LC,bi);if(lr1CY!=null)brDrawPoly([[x1,cyA],[mx,cyA],[mx,lr1CY],[x2,lr1CY]],bc,bi);}else{brDrawCard(b.lPiRound[lpiIdxB],lpiX,cyB-BR_CH/2,'L Play-In',true,LC,bi);if(lr1CY!=null)brDrawPoly([[x1,cyB],[mx,cyB],[mx,lr1CY],[x2,lr1CY]],bc,bi);}}}
+  // Losers bracket section label tag + draw
   let lEndX=lX;
-  if(doL){const tag=brEl('div',{position:'absolute',left:lX+'px',top:(lTop-36)+'px',fontSize:'.4rem',letterSpacing:'.16em',textTransform:'uppercase',color:'#ff6b35',background:'rgba(255,107,53,.07)',border:'1px solid rgba(255,107,53,.18)',padding:'2px 8px',borderRadius:'2px',userSelect:'none',pointerEvents:'none'});tag.textContent='Losers Bracket';world.appendChild(tag);lEndX=drawLSection(b.lRounds,lX);}
-  if(b.format==='double'&&b.grand){const gX=Math.max(wEndX,lEndX)+4;const gm=b.grand.matches[0];const wFCY=wTop+brCY(b.wRounds.length-1,0);const lFCY=doL?lCY(b.lRounds.length-1,0):null;const gCY=wFCY;const gTop=gCY-BR_CH/2;const lbl=brEl('div',{position:'absolute',left:gX+'px',top:(gTop-22)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:'#ffffff',userSelect:'none',pointerEvents:'none'});lbl.textContent='Grand Final';world.appendChild(lbl);brDrawCard(gm,gX,gTop,'Grand Final',false,wc,bi);const gCenter=gTop+BR_CH/2;const x1w=wEndX-BR_HGAP,x2=gX,mxW=(x1w+x2)/2;brDrawPoly([[x1w,wFCY],[mxW,wFCY],[mxW,gCenter],[x2,gCenter]],hexA(wc,.2),bi);if(doL&&lFCY!=null){const x1l=lEndX-BR_HGAP,mxL=(x1l+x2)/2;brDrawPoly([[x1l,lFCY],[mxL,lFCY],[mxL,gCenter],[x2,gCenter]],'rgba(255,107,53,.18)',bi);}if(b.grandReset&&gm.w===1){const rm=b.grandReset.matches[0];const rX=gX+BR_COL;const rlbl=brEl('div',{position:'absolute',left:rX+'px',top:(gTop-22)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:'#ffffff',userSelect:'none',pointerEvents:'none'});rlbl.textContent='Bracket Reset';world.appendChild(rlbl);brDrawCard(rm,rX,gTop,'Bracket Reset',false,wc,bi);const rmCenter=gTop+BR_CH/2;const x1r=gX+BR_CW,mxR=(x1r+rX)/2;brDrawPoly([[x1r,gCenter],[mxR,gCenter],[mxR,rmCenter],[rX,rmCenter]],hexA(wc,.2),bi);}}
+  if(doL){
+    const tag=brEl('div',{position:'absolute',left:lX+'px',top:(lTop-LABEL_H)+'px',fontSize:'.4rem',letterSpacing:'.16em',textTransform:'uppercase',color:LC,background:'rgba(255,107,53,.07)',border:'1px solid rgba(255,107,53,.18)',padding:'2px 8px',borderRadius:'2px',userSelect:'none',pointerEvents:'none'});
+    tag.textContent='Losers Bracket';world.appendChild(tag);
+    lEndX=drawLSection(b.lRounds,lX);
+  }
+  // Grand Final
+  if(b.format==='double'&&b.grand){const gX=Math.max(wEndX,lEndX)+4;const gm=b.grand.matches[0];const wFCY=wTop+brCY(b.wRounds.length-1,0);const lFCY=doL?lCY(b.lRounds.length-1,0):null;const gCY=wFCY;const gTop2=gCY-BR_CH/2;const lbl=brEl('div',{position:'absolute',left:gX+'px',top:(gTop2-20)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:'#ffffff',userSelect:'none',pointerEvents:'none'});lbl.textContent='Grand Final';world.appendChild(lbl);brDrawCard(gm,gX,gTop2,'Grand Final',false,wc,bi);const gCenter=gTop2+BR_CH/2;const x1w=wEndX-BR_HGAP,x2=gX,mxW=(x1w+x2)/2;brDrawPoly([[x1w,wFCY],[mxW,wFCY],[mxW,gCenter],[x2,gCenter]],hexA(wc,.2),bi);if(doL&&lFCY!=null){const x1l=lEndX-BR_HGAP,mxL=(x1l+x2)/2;brDrawPoly([[x1l,lFCY],[mxL,lFCY],[mxL,gCenter],[x2,gCenter]],'rgba(255,107,53,.18)',bi);}if(b.grandReset&&gm.w===1){const rm=b.grandReset.matches[0];const rX=gX+BR_COL;const rlbl=brEl('div',{position:'absolute',left:rX+'px',top:(gTop2-20)+'px',width:BR_CW+'px',textAlign:'center',fontSize:'.46rem',letterSpacing:'.14em',textTransform:'uppercase',color:'#ffffff',userSelect:'none',pointerEvents:'none'});rlbl.textContent='Bracket Reset';world.appendChild(rlbl);brDrawCard(rm,rX,gTop2,'Bracket Reset',false,wc,bi);const rmCenter=gTop2+BR_CH/2;const x1r=gX+BR_CW,mxR=(x1r+rX)/2;brDrawPoly([[x1r,gCenter],[mxR,gCenter],[mxR,rmCenter],[rX,rmCenter]],hexA(wc,.2),bi);}}
   // Check completion
   const banner=document.getElementById('br-save-banner-'+bi);
   if(banner&&isBrComplete(b)){
@@ -1189,15 +1284,149 @@ window.deletePastTournament=async function(ti){
   pastTournaments.splice(ti,1);await savePastTournamentsToStorage();renderPastTournaments();
 };
 
+// ── TOURNAMENT DEADLINE ───────────────────────────────────────────────────────
+let tournDeadline=null; // {name,deadline(ms),topN,fired}
+let _tournInterval=null;
+
+async function saveTournDeadlineStorage(){
+  try{await setDoc(doc(db,'config','tournDeadline'),{data:JSON.stringify(tournDeadline)});}catch(e){console.error(e);}
+}
+async function loadTournDeadlineStorage(){
+  try{const d=await getDoc(doc(db,'config','tournDeadline'));if(d.exists()&&d.data().data)tournDeadline=JSON.parse(d.data().data);}catch(e){console.error(e);}
+}
+
+window.saveTournDeadline=async function(){
+  const name=(document.getElementById('tourn-name-input')?.value||'').trim()||'Tournament Bracket';
+  const dlRaw=document.getElementById('tourn-deadline-input')?.value;
+  const topN=Math.min(16,Math.max(4,parseInt(document.getElementById('tourn-top-n')?.value)||8));
+  if(!dlRaw){showMsg('tourn-deadline-msg','Set a deadline first.',true);return;}
+  const dl=new Date(dlRaw).getTime();
+  if(isNaN(dl)){showMsg('tourn-deadline-msg','Invalid date.',true);return;}
+  tournDeadline={name,deadline:dl,topN,fired:false};
+  await saveTournDeadlineStorage();
+  showMsg('tourn-deadline-msg','Deadline saved!');
+  _updateTournDeadlineStatus();
+  _startTournCountdown();
+};
+
+window.clearTournDeadline=async function(){
+  tournDeadline=null;
+  await saveTournDeadlineStorage();
+  showMsg('tourn-deadline-msg','Deadline cleared.');
+  _updateTournDeadlineStatus();
+  _startTournCountdown();
+};
+
+window.fireAutoTournament=async function(){
+  const name=(document.getElementById('tourn-name-input')?.value||'').trim()||'Tournament Bracket';
+  const topN=Math.min(16,Math.max(4,parseInt(document.getElementById('tourn-top-n')?.value)||8));
+  await _autoCreateBracket(name,topN);
+  showMsg('tourn-deadline-msg','Bracket created!');
+};
+
+async function _autoCreateBracket(name,topN){
+  const sorted=[...players].sort((a,b)=>(b.points||0)-(a.points||0));
+  const top=sorted.slice(0,topN).map(p=>p.name);
+  if(top.length<2)return;
+  const b=buildBr(top,'double');
+  b.id=Date.now();b.name=name;b.seeding='rated';b.players=top;b.createdAt=Date.now();b.autoGenerated=true;
+  propagateBr(b);brackets.push(b);
+  await saveBracketsToStorage();
+  renderBrackets();
+}
+
+function _updateTournDeadlineStatus(){
+  const el=document.getElementById('tourn-deadline-status');if(!el)return;
+  if(!tournDeadline){el.style.display='none';return;}
+  el.style.display='block';
+  const fired=tournDeadline.fired;
+  const dl=new Date(tournDeadline.deadline).toLocaleString();
+  el.innerHTML=`<span style="color:var(--accent)">${tournDeadline.name}</span> · Top ${tournDeadline.topN} · Double Elim<br>Deadline: ${dl}<br>${fired?'<span style="color:var(--win)">✓ Bracket auto-created</span>':'<span style="color:var(--accent)">⏳ Waiting…</span>'}`;
+  // Populate inputs if empty
+  const ni=document.getElementById('tourn-name-input');
+  const di=document.getElementById('tourn-deadline-input');
+  const ti=document.getElementById('tourn-top-n');
+  if(ni&&!ni.value)ni.value=tournDeadline.name;
+  if(di&&!di.value){const d=new Date(tournDeadline.deadline);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());di.value=d.toISOString().slice(0,16);}
+  if(ti&&!ti.value)ti.value=tournDeadline.topN;
+}
+
+function _updateTournHeaderBtn(){
+  const hdr=document.getElementById('tourn-header-btn');if(!hdr)return;
+  hdr.innerHTML=isAdmin?'<button class="btn" onclick="openNewBracketModal()">+ New Tournament</button>':'';
+}
+
+function _startTournCountdown(){
+  if(_tournInterval){clearInterval(_tournInterval);_tournInterval=null;}
+  const banner=document.getElementById('tourn-countdown-banner');
+  const timerEl=document.getElementById('tourn-countdown-timer');
+  const nameEl=document.getElementById('tourn-countdown-name');
+  _updateTournHeaderBtn();
+  if(!tournDeadline||tournDeadline.fired){
+    if(banner)banner.style.display='none';
+    return;
+  }
+  function tick(){
+    const diff=tournDeadline.deadline-Date.now();
+    _updateTournHeaderBtn();
+    if(diff<=0){
+      // Fire the bracket
+      if(!tournDeadline.fired){
+        tournDeadline.fired=true;
+        saveTournDeadlineStorage();
+        _autoCreateBracket(tournDeadline.name,tournDeadline.topN);
+        _updateTournDeadlineStatus();
+      }
+      if(banner)banner.style.display='none';
+      if(_tournInterval){clearInterval(_tournInterval);_tournInterval=null;}
+      return;
+    }
+    // Show banner only when no active bracket exists OR user is not admin
+    if(!isAdmin&&banner){
+      banner.style.display='block';
+      const d=Math.floor(diff/86400000);
+      const h=Math.floor((diff%86400000)/3600000);
+      const m=Math.floor((diff%3600000)/60000);
+      const s=Math.floor((diff%60000)/1000);
+      let str='';
+      if(d>0)str+=d+'d ';
+      str+=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+      if(timerEl)timerEl.textContent=str;
+      const dlDate=new Date(tournDeadline.deadline);
+      if(nameEl)nameEl.textContent=tournDeadline.name+' · '+dlDate.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})+' '+dlDate.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+    }else if(banner){
+      banner.style.display='none';
+    }
+  }
+  tick();
+  _tournInterval=setInterval(tick,1000);
+}
+
+// ── ADMIN PANEL RENDER ────────────────────────────────────────────────────────
+function renderAdminPanel(){
+  _updateTournDeadlineStatus();
+  // Sync scoring inputs
+  document.getElementById('scoring-win').value=scoring.winPts;
+  document.getElementById('scoring-loss').value=scoring.lossPts;
+  document.getElementById('scoring-streak').value=scoring.streakBonus;
+}
+
 // Init
-(async()=>{await Promise.all([loadBracketsFromStorage(),loadPastTournamentsFromStorage()]);renderBrackets();renderPastTournaments();})();
+(async()=>{
+  await Promise.all([loadBracketsFromStorage(),loadPastTournamentsFromStorage(),loadTournDeadlineStorage()]);
+  renderBrackets();renderPastTournaments();
+  _updateTournDeadlineStatus();
+  _startTournCountdown();
+})();
 
 // Apply admin state on load
 if(isAdmin){
   document.getElementById('admin-btn').classList.add('on');
   document.getElementById('admin-btn-label').textContent=' Logout';
   document.getElementById('scoring-settings-card').classList.add('visible');
+  const tab=document.getElementById('admin-tab-btn');if(tab)tab.style.display='';
 }
+_updateTournHeaderBtn();
 </script>
 </body>
 </html>
