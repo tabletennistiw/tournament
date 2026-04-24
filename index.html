@@ -1382,7 +1382,7 @@ function _startTournCountdown(){
       return;
     }
     // Show banner only when no active bracket exists OR user is not admin
-    if(!isAdmin&&banner){
+    if(banner){
       banner.style.display='block';
       const d=Math.floor(diff/86400000);
       const h=Math.floor((diff%86400000)/3600000);
