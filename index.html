@@ -285,6 +285,7 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
         <div class="form-card">
           <h2>Add Player</h2>
           <div class="field"><label>Player Name</label><input type="text" id="player-name" placeholder="Enter name…"></div>
+          <div class="field"><label>Player # (00–99)</label><input type="number" id="player-num" placeholder="07" min="0" max="99" style="width:100px"></div>
           <button class="btn" id="add-player-btn" onclick="addPlayer()">Add Player</button>
           <div class="msg" id="player-msg"></div>
         </div>
@@ -471,6 +472,7 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
   <div class="am-box">
     <h2>Edit Player</h2>
     <input type="hidden" id="edit-pid">
+    <div class="field"><label>Player # (00â99)</label><input type="number" id="edit-num" step="1" min="0" max="99" style="width:100px"></div>
     <div class="field"><label>Name</label><input type="text" id="edit-name" autocomplete="off"></div>
     <div class="field"><label>Points</label><input type="number" id="edit-points" step="1" min="0"></div>
     <div class="field"><label>Wins</label><input type="number" id="edit-wins" step="1" min="0"></div>
@@ -503,7 +505,7 @@ const ADMIN_PW = 'changeme';
 
 // ─────────────────────────────────────────────────────────────────────────────
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,doc,addDoc,setDoc,updateDoc,deleteDoc,getDoc,getDocs,onSnapshot,query,orderBy,serverTimestamp,runTransaction}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,doc,addDoc,setDoc,updateDoc,deleteDoc,getDoc,getDocs,onSnapshot,query,orderBy,where,serverTimestamp,runTransaction}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const app=initializeApp(FIREBASE_CONFIG);
 const db=getFirestore(app);
 
@@ -646,10 +648,11 @@ function _lbCreateEl(p,idx){
   const el=document.createElement('div');
   el.className='lb-row'+(idx<3?' is-rank-'+idx:'');
   el.dataset.id=p.firestoreId;
+  const numBadge=p.playerNum!=null?`<span style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--accent);opacity:.75;margin-left:.3rem;flex-shrink:0">#${String(p.playerNum).padStart(2,'0')}</span>`:'';
   el.innerHTML=`
     <div class="lb-bar" style="width:${barPct}%"></div>
     <span class="rank ${_lbRankClass(idx)}">${idx+1}</span>
-    <div class="pname-cell">${av}<span class="player-name">${escCap(p.name)}</span></div>
+    <div class="pname-cell">${av}<span class="player-name">${escCap(p.name)}</span>${numBadge}</div>
     <div class="lb-col-pts"><span class="pts-val">${(p.points||0).toLocaleString()}</span></div>
     <div class="lb-col-wl"><span class="record-badge"><span class="w">${p.wins||0}W</span><span class="l">${p.losses||0}L</span></span></div>
   `;
@@ -723,13 +726,21 @@ function renderLeaderboard(){
 // ─── PLAYERS ─────────────────────────────────────────────────────────────────
 window.addPlayer=async function(){
   const name=document.getElementById('player-name').value.trim();
+  const numRaw=document.getElementById('player-num').value.trim();
   if(!name){showMsg('player-msg','Name required.',true);return;}
-  if(players.find(p=>p.name.toLowerCase()===name.toLowerCase())){showMsg('player-msg','Already exists.',true);return;}
+  const playerNum=numRaw===''?null:parseInt(numRaw,10);
+  if(numRaw!==''&&(isNaN(playerNum)||playerNum<0||playerNum>99)){showMsg('player-msg','# must be 00–99.',true);return;}
+  if(players.find(p=>p.name.toLowerCase()===name.toLowerCase())){showMsg('player-msg','Name already exists.',true);return;}
+  if(playerNum!==null&&players.find(p=>p.playerNum===playerNum)){showMsg('player-msg',`#${String(playerNum).padStart(2,'0')} is already taken.`,true);return;}
   const btn=document.getElementById('add-player-btn');btn.disabled=true;
   try{
-    await addDoc(collection(db,'players'),{name,points:0,wins:0,losses:0,createdAt:serverTimestamp()});
+    const data={name,points:0,wins:0,losses:0,createdAt:serverTimestamp()};
+    if(playerNum!==null)data.playerNum=playerNum;
+    await addDoc(collection(db,'players'),data);
     document.getElementById('player-name').value='';
-    showMsg('player-msg',name+' added!');
+    document.getElementById('player-num').value='';
+    const tag=playerNum!==null?` (#${String(playerNum).padStart(2,'0')})`:'';
+    showMsg('player-msg',name+tag+' added!');
   }catch(e){showMsg('player-msg','Error: '+e.message,true);}finally{btn.disabled=false;}
 };
 
@@ -740,8 +751,9 @@ function renderPlayersList(){
   el.innerHTML=sorted.map(p=>{
     const streak=p.streak||0;
     const streakHtml=streak>=2?`<span class="streak-badge">🔥 ${streak}× streak</span>`:'';
+    const numTag=p.playerNum!=null?`<span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--accent);background:rgba(229,178,93,.1);border:1px solid rgba(229,178,93,.3);padding:.1rem .35rem;border-radius:2px;margin-right:.3rem;flex-shrink:0">#${String(p.playerNum).padStart(2,'0')}</span>`:'';
     return`<div class="player-list-item">
-    <span class="pli-name">${escCap(p.name)}</span>
+    ${numTag}<span class="pli-name">${escCap(p.name)}</span>
     ${streakHtml}
     <span class="pli-pts">${p.points||0} pts</span>
     <span class="pli-rec">${p.wins||0}W–${p.losses||0}L</span>
@@ -862,6 +874,7 @@ window.openEditPlayer=function(fid){
   if(!isAdmin)return;
   const p=players.find(x=>x.firestoreId===fid);if(!p)return;
   document.getElementById('edit-pid').value=fid;
+  document.getElementById('edit-num').value=p.playerNum!=null?p.playerNum:'';
   document.getElementById('edit-name').value=p.name;
   document.getElementById('edit-points').value=p.points||0;
   document.getElementById('edit-wins').value=p.wins||0;
@@ -873,12 +886,17 @@ window.openEditPlayer=function(fid){
 window.submitEditPlayer=async function(){
   const fid=document.getElementById('edit-pid').value;
   const name=document.getElementById('edit-name').value.trim();
+  const numRaw2=document.getElementById('edit-num').value.trim();
+  const editNum=numRaw2===''?null:parseInt(numRaw2,10);
   const points=parseInt(document.getElementById('edit-points').value)||0;
   const wins=parseInt(document.getElementById('edit-wins').value)||0;
   const losses=parseInt(document.getElementById('edit-losses').value)||0;
   if(!name){showMsg('edit-player-msg','Name required.',true);return;}
+  if(numRaw2!==''&&(isNaN(editNum)||editNum<0||editNum>99)){showMsg('edit-player-msg','# must be 00–99.',true);return;}
+  if(editNum!==null&&players.find(p=>p.firestoreId!==fid&&p.playerNum===editNum)){showMsg('edit-player-msg',`#${String(editNum).padStart(2,'0')} already taken by another player.`,true);return;}
   try{
-    await updateDoc(doc(db,'players',fid),{name,points,wins,losses});
+    const upd={name,points,wins,losses,playerNum:editNum};
+    await updateDoc(doc(db,'players',fid),upd);
     document.getElementById('admin-edit-overlay').classList.remove('open');
   }catch(e){showMsg('edit-player-msg','Error: '+e.message,true);}
 };
@@ -889,12 +907,78 @@ onSnapshot(query(collection(db,'players'),orderBy('points','desc')),snap=>{
   players=snap.docs.map(d=>({firestoreId:d.id,...d.data()}));
   renderLeaderboard();renderMatchSelects();
   if(isAdmin||document.getElementById('panel-matches').classList.contains('active'))renderPlayersList();
+  _tryFlushPendingDeviceMatches();
 },err=>console.error(err));
 
 onSnapshot(query(collection(db,'matches'),orderBy('date','desc')),snap=>{
   matches=snap.docs.map(d=>({firestoreId:d.id,...d.data()}));
   if(document.getElementById('panel-matches').classList.contains('active'))renderHistory();
 },err=>console.error(err));
+
+// ─── DEVICE MATCHES — auto-process FT5 results submitted directly from the scoreboards ──
+// The scoreboard POSTs {winnerNum, loserNum, format, processed:false} to device_matches.
+// This listener picks those up, resolves player numbers to Firestore IDs, and
+// runs the same scoring transaction as a manual match submit.
+let _pendingDeviceMatches=[];
+
+async function _processDeviceMatch(docSnap){
+  const m=docSnap.data();
+  if(m.processed)return;
+  const winner=players.find(p=>p.playerNum===m.winnerNum);
+  const loser =players.find(p=>p.playerNum===m.loserNum);
+  if(!winner||!loser){
+    if(!_pendingDeviceMatches.find(d=>d.id===docSnap.id))_pendingDeviceMatches.push(docSnap);
+    console.log('[device_matches] queued — player not found yet: #'+String(m.winnerNum).padStart(2,'0')+' vs #'+String(m.loserNum).padStart(2,'0'));
+    return;
+  }
+  const wid=winner.firestoreId,lid=loser.firestoreId;
+  try{
+    await runTransaction(db,async tx=>{
+      const dmRef=doc(db,'device_matches',docSnap.id);
+      const dmSnap=await tx.get(dmRef);
+      if(!dmSnap.exists()||dmSnap.data().processed)return; // already handled by another tab
+      const[ws,ls]=await Promise.all([tx.get(doc(db,'players',wid)),tx.get(doc(db,'players',lid))]);
+      if(!ws.exists()||!ls.exists())return;
+      const w=ws.data(),l=ls.data();
+      const wStreak=w.streak||0;
+      const wDelta=scoring.winPts+(wStreak*scoring.streakBonus);
+      const lDelta=scoring.lossPts;
+      const newWPts=(w.points||0)+wDelta;
+      const newLPts=(l.points||0)+lDelta;
+      tx.update(doc(db,'players',wid),{points:newWPts,wins:(w.wins||0)+1,streak:wStreak+1});
+      tx.update(doc(db,'players',lid),{points:newLPts,losses:(l.losses||0)+1,streak:0});
+      tx.set(doc(collection(db,'matches')),{
+        winnerId:wid,loserId:lid,winnerName:w.name,loserName:l.name,
+        p1id:wid,p2id:lid,p1name:w.name,p2name:l.name,
+        matchScore:(m.winnerScore!=null&&m.loserScore!=null)?(m.winnerScore+'–'+m.loserScore):m.format||'FT5',
+        winnerNum:m.winnerNum,loserNum:m.loserNum,
+        p1oldPoints:w.points||0,p1newPoints:newWPts,p1delta:wDelta,
+        p2oldPoints:l.points||0,p2newPoints:newLPts,p2delta:lDelta,
+        winnerStreak:wStreak+1,deviceSubmit:true,
+        date:serverTimestamp()
+      });
+      tx.update(dmRef,{processed:true});
+    });
+    console.log('[device_matches] ✓ processed #'+String(m.winnerNum).padStart(2,'0')+' beat #'+String(m.loserNum).padStart(2,'0'));
+  }catch(e){console.error('[device_matches] transaction error:',e);}
+}
+
+function _tryFlushPendingDeviceMatches(){
+  if(!_pendingDeviceMatches.length)return;
+  const remaining=[];
+  _pendingDeviceMatches.forEach(docSnap=>{
+    const m=docSnap.data();
+    const w=players.find(p=>p.playerNum===m.winnerNum);
+    const l=players.find(p=>p.playerNum===m.loserNum);
+    if(w&&l)_processDeviceMatch(docSnap);
+    else remaining.push(docSnap);
+  });
+  _pendingDeviceMatches=remaining;
+}
+
+onSnapshot(query(collection(db,'device_matches'),where('processed','==',false)),snap=>{
+  snap.docs.forEach(docSnap=>_processDeviceMatch(docSnap));
+},err=>console.error('[device_matches] listener error:',err));
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
