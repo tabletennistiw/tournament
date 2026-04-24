@@ -285,7 +285,6 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
         <div class="form-card">
           <h2>Add Player</h2>
           <div class="field"><label>Player Name</label><input type="text" id="player-name" placeholder="Enter name…"></div>
-          <div class="field"><label>Player # (00–99)</label><input type="number" id="player-num" placeholder="07" min="0" max="99" style="width:100px"></div>
           <button class="btn" id="add-player-btn" onclick="addPlayer()">Add Player</button>
           <div class="msg" id="player-msg"></div>
         </div>
@@ -750,19 +749,17 @@ function renderLeaderboard(){
 // ─── PLAYERS ─────────────────────────────────────────────────────────────────
 window.addPlayer=async function(){
   const name=document.getElementById('player-name').value.trim();
-  const numRaw=document.getElementById('player-num').value.trim();
   if(!name){showMsg('player-msg','Name required.',true);return;}
-  const playerNum=numRaw===''?null:parseInt(numRaw,10);
-  if(numRaw!==''&&(isNaN(playerNum)||playerNum<0||playerNum>99)){showMsg('player-msg','# must be 00–99.',true);return;}
   if(players.find(p=>p.name.toLowerCase()===name.toLowerCase())){showMsg('player-msg','Name already exists.',true);return;}
-  if(playerNum!==null&&players.find(p=>p.playerNum===playerNum)){showMsg('player-msg',`#${String(playerNum).padStart(2,'0')} is already taken.`,true);return;}
+  const used=new Set(players.map(p=>p.playerNum).filter(n=>n!=null));
+  let playerNum=null;
+  for(let i=0;i<=99;i++){if(!used.has(i)){playerNum=i;break;}}
   const btn=document.getElementById('add-player-btn');btn.disabled=true;
   try{
     const data={name,points:0,wins:0,losses:0,createdAt:serverTimestamp()};
     if(playerNum!==null)data.playerNum=playerNum;
     await addDoc(collection(db,'players'),data);
     document.getElementById('player-name').value='';
-    document.getElementById('player-num').value='';
     const tag=playerNum!==null?` (#${String(playerNum).padStart(2,'0')})`:'';
     showMsg('player-msg',name+tag+' added!');
   }catch(e){showMsg('player-msg','Error: '+e.message,true);}finally{btn.disabled=false;}
