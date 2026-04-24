@@ -635,6 +635,22 @@ function _lbUpdateStats(el,p){
   const lEl=el.querySelector('.record-badge .l');if(lEl) lEl.textContent=(p.losses||0)+'L';
   const bar=el.querySelector('.lb-bar');
   if(bar&&_lbMaxPts>0)bar.style.width=Math.round((p.points||0)/_lbMaxPts*100)+'%';
+  // Update player number badge
+  const pnameCell=el.querySelector('.pname-cell');
+  if(pnameCell){
+    let numSpan=pnameCell.querySelector('.lb-num-badge');
+    if(p.playerNum!=null){
+      if(!numSpan){
+        numSpan=document.createElement('span');
+        numSpan.className='lb-num-badge';
+        numSpan.style.cssText="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--accent);opacity:.75;margin-left:.3rem;flex-shrink:0";
+        pnameCell.appendChild(numSpan);
+      }
+      numSpan.textContent='#'+String(p.playerNum).padStart(2,'0');
+    }else if(numSpan){
+      numSpan.remove();
+    }
+  }
 }
 function _lbAvColor(name){
   // deterministic hue from name
