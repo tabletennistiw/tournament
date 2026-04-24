@@ -57,21 +57,33 @@ main{padding:1.25rem;position:relative;z-index:1;width:100%;overflow-x:visible;}
 
 /* LEADERBOARD */
 #panel-leaderboard{max-width:860px;margin-left:auto;margin-right:auto;}
-.lb-head-row{display:grid;grid-template-columns:2.4rem 1fr 5.5rem 3.5rem;padding:.55rem .5rem;
-  border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:.58rem;
+.lb-head-row{display:grid;grid-template-columns:2.6rem 1fr 6rem 4rem;padding:.5rem .7rem;
+  border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:.56rem;
   letter-spacing:.1em;text-transform:uppercase;color:var(--muted);width:100%;box-sizing:border-box;}
 .lb-h-pts,.lb-h-wl{text-align:right;}
+/* points progress bar behind each row */
+.lb-bar{
+  position:absolute;left:0;top:0;bottom:0;width:0%;
+  background:linear-gradient(90deg,rgba(229,178,93,.13) 0%,rgba(229,178,93,0) 100%);
+  transition:width 1s cubic-bezier(.4,0,.2,1);pointer-events:none;z-index:0;
+}
 .lb-row{
   position:absolute;left:0;right:0;
-  display:grid;grid-template-columns:2.4rem 1fr 5.5rem 3.5rem;
-  padding:.6rem .5rem;
-  border-bottom:1px solid rgba(74,42,56,.5);
+  display:grid;grid-template-columns:2.6rem 1fr 6rem 4rem;
+  padding:.75rem .7rem;
+  border-bottom:1px solid rgba(74,42,56,.4);
   background:var(--bg);
   align-items:center;
   box-sizing:border-box;
-  transition:transform .38s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  transition:transform .38s cubic-bezier(.4,0,.2,1),box-shadow .18s,background .18s;
 }
-.lb-row:hover{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+.lb-row>*:not(.lb-bar){position:relative;z-index:1;}
+.lb-row:hover{background:color-mix(in srgb,var(--accent) 6%,transparent);box-shadow:inset 3px 0 0 rgba(229,178,93,.55);}
+.lb-row.is-rank-0{background:color-mix(in srgb,#ffd700 3%,var(--bg));box-shadow:inset 3px 0 0 rgba(255,215,0,.7);}
+.lb-row.is-rank-1{box-shadow:inset 3px 0 0 rgba(192,192,192,.5);}
+.lb-row.is-rank-2{box-shadow:inset 3px 0 0 rgba(205,127,50,.5);}
+.lb-row.is-rank-0:hover{background:color-mix(in srgb,#ffd700 6%,var(--bg));box-shadow:inset 3px 0 0 #ffd700;}
 .lb-row .lb-col-pts{text-align:right;}
 .lb-row .lb-col-wl{text-align:right;}
 @keyframes lbRowEnter{
@@ -91,14 +103,20 @@ main{padding:1.25rem;position:relative;z-index:1;width:100%;overflow-x:visible;}
   transform-origin:top center;transition:none;
   pointer-events:none;z-index:10;
 }
-.rank{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--muted);white-space:nowrap;}
-.rank.top1{color:#ffd700;}.rank.top2{color:#c0c0c0;}.rank.top3{color:#cd7f32;}
-.lb-av-ph{width:28px;height:28px;border-radius:50%;background:var(--surface);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.75rem;color:var(--muted);flex-shrink:0;}
-.player-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;}
-.pname-cell{display:flex;align-items:center;gap:.45rem;min-width:0;}
-.pts-val{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;color:var(--accent);letter-spacing:.05em;white-space:nowrap;}
-.record-badge{font-family:'DM Mono',monospace;font-size:.6rem;display:inline-flex;gap:.3rem;white-space:nowrap;}
+.rank{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--muted);white-space:nowrap;line-height:1;}
+.rank.top1{color:#ffd700;font-size:1.4rem;text-shadow:0 0 12px rgba(255,215,0,.4);}
+.rank.top2{color:#c0c0c0;font-size:1.25rem;}
+.rank.top3{color:#cd7f32;font-size:1.2rem;}
+.lb-av-ph{width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.8rem;font-weight:700;flex-shrink:0;
+  border:1.5px solid transparent;transition:box-shadow .2s;}
+.lb-av-ph.av-rank-0{border-color:rgba(255,215,0,.5);box-shadow:0 0 8px rgba(255,215,0,.2);}
+.lb-av-ph.av-rank-1{border-color:rgba(192,192,192,.4);}
+.lb-av-ph.av-rank-2{border-color:rgba(205,127,50,.4);}
+.player-name{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;}
+.pname-cell{display:flex;align-items:center;gap:.5rem;min-width:0;}
+.pts-val{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:.05em;white-space:nowrap;}
+.record-badge{font-family:'DM Mono',monospace;font-size:.58rem;display:inline-flex;flex-direction:column;gap:.05rem;white-space:nowrap;text-align:right;line-height:1.35;}
 .record-badge .w{color:var(--win);}.record-badge .l{color:var(--loss);}
 
 /* FORMS */
@@ -495,6 +513,7 @@ mq.addEventListener('change',toggleSub); toggleSub();
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let players=[],matches=[],isAdmin=false;
+let _lbMaxPts=0;
 let scoring={winPts:500,lossPts:300,streakBonus:50};
 
 // ─── SCORING CONFIG ───────────────────────────────────────────────────────────
@@ -584,7 +603,7 @@ window.showPanel=function(id,btn){
 };
 
 // ─── LEADERBOARD ─────────────────────────────────────────────────────────────
-const LB_ROW_H=46;
+const LB_ROW_H=54;
 let _lbEls={},_lbPrevVis=[];
 
 function _lbRankClass(i){return i===0?'top1':i===1?'top2':i===2?'top3':'';}
@@ -601,21 +620,37 @@ function _lbSetY(el,idx,animate){
 function _lbUpdateRank(el,idx){
   const r=el.querySelector('.rank');if(!r)return;
   r.className=`rank ${_lbRankClass(idx)}`;r.textContent=idx+1;
+  // row-level rank classes for accent borders
+  el.classList.remove('is-rank-0','is-rank-1','is-rank-2');
+  if(idx<3)el.classList.add('is-rank-'+idx);
+  // avatar rank class
+  const av=el.querySelector('.lb-av-ph');
+  if(av){av.classList.remove('av-rank-0','av-rank-1','av-rank-2');if(idx<3)av.classList.add('av-rank-'+idx);}
 }
 function _lbUpdateStats(el,p){
-  const pv=el.querySelector('.pts-val');if(pv) pv.textContent=(p.points||0);
+  const pv=el.querySelector('.pts-val');if(pv) pv.textContent=(p.points||0).toLocaleString();
   const wEl=el.querySelector('.record-badge .w');if(wEl) wEl.textContent=(p.wins||0)+'W';
   const lEl=el.querySelector('.record-badge .l');if(lEl) lEl.textContent=(p.losses||0)+'L';
+  const bar=el.querySelector('.lb-bar');
+  if(bar&&_lbMaxPts>0)bar.style.width=Math.round((p.points||0)/_lbMaxPts*100)+'%';
+}
+function _lbAvColor(name){
+  // deterministic hue from name
+  let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))%360;
+  return `hsl(${h},28%,20%)`;
 }
 function _lbCreateEl(p,idx){
-  const av=`<div class="lb-av-ph">${esc(p.name.charAt(0).toUpperCase())}</div>`;
+  const barPct=_lbMaxPts>0?Math.round((p.points||0)/_lbMaxPts*100):0;
+  const avRankCls=idx<3?` av-rank-${idx}`:'';
+  const av=`<div class="lb-av-ph${avRankCls}" style="background:${_lbAvColor(p.name)};color:hsl(${(p.name.charCodeAt(0)*37)%360},60%,75%)">${esc(p.name.charAt(0).toUpperCase())}</div>`;
   const el=document.createElement('div');
-  el.className='lb-row';
+  el.className='lb-row'+(idx<3?' is-rank-'+idx:'');
   el.dataset.id=p.firestoreId;
   el.innerHTML=`
+    <div class="lb-bar" style="width:${barPct}%"></div>
     <span class="rank ${_lbRankClass(idx)}">${idx+1}</span>
     <div class="pname-cell">${av}<span class="player-name">${escCap(p.name)}</span></div>
-    <div class="lb-col-pts"><span class="pts-val">${p.points||0}</span></div>
+    <div class="lb-col-pts"><span class="pts-val">${(p.points||0).toLocaleString()}</span></div>
     <div class="lb-col-wl"><span class="record-badge"><span class="w">${p.wins||0}W</span><span class="l">${p.losses||0}L</span></span></div>
   `;
   return el;
@@ -632,6 +667,7 @@ function _lbPulseSignal(){
 
 function renderLeaderboard(){
   const sorted=[...players].sort((a,b)=>(b.points||0)-(a.points||0));
+  _lbMaxPts=sorted.length>0?(sorted[0].points||0):0;
   document.getElementById('lb-loading').style.display='none';
   if(!sorted.length){document.getElementById('lb-table').style.display='none';document.getElementById('lb-empty').style.display='block';return;}
   document.getElementById('lb-empty').style.display='none';
