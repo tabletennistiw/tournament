@@ -112,22 +112,11 @@ main{padding:1.25rem;position:relative;z-index:1;width:100%;overflow-x:visible;}
 .lb-av-ph.av-rank-0{border-color:rgba(255,215,0,.5);box-shadow:0 0 8px rgba(255,215,0,.2);}
 .lb-av-ph.av-rank-1{border-color:rgba(192,192,192,.4);}
 .lb-av-ph.av-rank-2{border-color:rgba(205,127,50,.4);}
-.player-name{
-  font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.06em;overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;
-  flex: 1; min-width: 0; /* ADDED FIX */
-}
+.player-name{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;flex:1;min-width:0;}
 .pname-cell{display:flex;align-items:center;gap:.5rem;min-width:0;}
 .pts-val{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:.05em;white-space:nowrap;}
 .record-badge{font-family:'DM Mono',monospace;font-size:.58rem;display:inline-flex;flex-direction:column;gap:.05rem;white-space:nowrap;text-align:right;line-height:1.35;}
 .record-badge .w{color:var(--win);}.record-badge .l{color:var(--loss);}
-.lb-num-badge {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
-  color: var(--muted);
-  margin-left: 0.4rem;
-  opacity: 0.8;
-}
 
 /* FORMS */
 .matches-layout{display:grid;grid-template-columns:1fr;gap:1.25rem;}
@@ -196,28 +185,22 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
   padding:.14rem .4rem;border-radius:2px;border:1px solid;display:inline-block;margin-left:.35rem;}
 .br-pill.winners{color:var(--accent);border-color:rgba(229,178,93,.4);background:rgba(229,178,93,.08);}
 .br-pill.losers{color:#ff6b35;border-color:rgba(255,107,53,.35);background:rgba(255,107,53,.07);}
-.br-card-expanded{position:fixed!important;inset:0!important;z-index:2000!important;border-radius:0!important;display:flex;flex-direction:column;background:var(--surface);}
-.br-card-expanded .br-viewport{height:100%!important;flex:1;}
 
 /* MODAL */
 .am-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;
   display:flex;align-items:center;justify-content:center;padding:1rem;pointer-events:none;opacity:0;transition:opacity .18s;}
 .am-overlay.open{pointer-events:all;opacity:1;}
-.am-box{background:var(--surface);border:1px solid var(--border);padding:1.5rem;width:100%;max-width:420px;animation:mIn .18s ease;}
-@keyframes mIn{from{transform:translateY(6px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.am-box{background:var(--surface);border:1px solid var(--border);padding:1.5rem;width:100%;max-width:420px;}
 .am-box h2{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.08em;margin-bottom:1.1rem;color:var(--text);}
 .m-close{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;
   font-size:.58rem;letter-spacing:.07em;text-transform:uppercase;padding:.28rem .55rem;cursor:pointer;flex-shrink:0;}
-.m-close:hover{border-color:var(--text);color:var(--text);}
 
-/* ADMIN SECTION */
+/* ADMIN */
 .admin-section{margin-bottom:1.5rem;}
 .admin-stitle{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
   color:var(--admin);margin-bottom:.65rem;border-bottom:1px solid rgba(201,160,220,.2);padding-bottom:.4rem;}
 .streak-badge{font-family:'DM Mono',monospace;font-size:.52rem;color:#ff6b35;background:rgba(255,107,53,.12);
   border:1px solid rgba(255,107,53,.35);padding:.1rem .35rem;border-radius:2px;white-space:nowrap;margin-left:.3rem;}
-.admin-scoring-card{display:none;}
-.admin-scoring-card.visible{display:block;}
 </style>
 </head>
 <body>
@@ -232,15 +215,14 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
       <g><g fill="currentColor" transform="matrix(0.5002,0,0,0.5002,5.244337,16.159662)">
         <path d="M85.83,1.68h-.2c-13.75,0-24.95,11.17-24.99,24.92-.04,13.78,11.14,25.02,24.93,25.06h.2c13.75,0,24.95-11.17,24.99-24.92.04-13.78-11.14-25.02-24.93-25.06ZM82.49,8.06l-.09,15.41-15.3-.09c.66-3.79,2.46-7.29,5.23-10.07,2.8-2.8,6.33-4.6,10.16-5.25ZM82.36,29.54l-.09,15.71c-3.77-.7-7.3-2.53-10.01-5.29-2.86-2.89-4.65-6.56-5.24-10.51l15.34.09ZM88.35,45.37l.09-15.79,15.91.09c-1.32,8.12-7.83,14.54-16,15.7ZM88.48,23.5l.09-15.49c8.05,1.24,14.43,7.57,15.77,15.58l-15.86-.09Z"/>
       </g>
-      <rect style="fill:currentColor;transform-box:fill-box;transform-origin:50% 50%;" transform="matrix(0.866026,-0.5,0.5,0.866026,-10.207183,-11.867224)" x="64.404" y="49.512" width="5" height="14" rx="1" ry="1"/>
+      <rect style="fill:currentColor;" transform="matrix(0.866026,-0.5,0.5,0.866026,-10.207183,-11.867224)" x="64.404" y="49.512" width="5" height="14" rx="1" ry="1"/>
       </g>
       <path style="fill:currentColor;" d="M48.584,41.937C51.595,42.003,52.489,42.72,54.089,45.157L58.396,42.534C57.247,40.011,57.233,38.736,58.841,35.979C55.729,37.282,48.569,41.95,48.584,41.937Z"/>
     </svg>
     <h1>TTTIW</h1>
   </div>
-  <span class="header-sub" style="display:none" id="header-sub-text">Table Tennis · Texas Invention<span style="color:var(--accent)">Works</span></span>
   <div class="header-right">
-    <div id="lb-signal" class="lb-signal" title="Live leaderboard">
+    <div id="lb-signal" class="lb-signal">
       <div class="lb-signal-bars">
         <div class="lb-sb" id="lb-sb1"></div><div class="lb-sb" id="lb-sb2"></div>
         <div class="lb-sb" id="lb-sb3"></div><div class="lb-sb" id="lb-sb4"></div>
@@ -259,7 +241,6 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
 </nav>
 
 <main>
-
   <div id="panel-leaderboard" class="panel active">
     <div id="lb-loading" class="loading">Loading leaderboard</div>
     <div id="lb-table" style="display:none">
@@ -270,7 +251,6 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
       </div>
       <div id="lb-list" style="position:relative;width:100%"></div>
     </div>
-    <div id="lb-empty" class="empty" style="display:none">No players yet.</div>
   </div>
 
   <div id="panel-matches" class="panel">
@@ -280,183 +260,153 @@ input:not([type=checkbox])::placeholder,textarea::placeholder{color:var(--muted)
           <h2>Submit Match</h2>
           <div class="field"><label>Winner</label><select id="match-winner"></select></div>
           <div class="field"><label>Loser</label><select id="match-loser"></select></div>
-          <div class="field"><label>Score (optional)</label><input type="text" id="match-score" placeholder="e.g. 11-7"></div>
-          <button class="btn" id="submit-match-btn" onclick="submitMatch()">Submit Match</button>
+          <div class="field"><label>Score</label><input type="text" id="match-score" placeholder="e.g. 11-7"></div>
+          <button class="btn" onclick="submitMatch()">Submit Match</button>
           <div class="msg" id="match-msg"></div>
-          <p id="scoring-label" style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--muted);margin-top:.75rem;line-height:1.7">
-            Win = <span style="color:var(--win)">+500 pts</span> · Loss = <span style="color:var(--accent)">+300 pts</span> · Streak bonus = <span style="color:#ff6b35">+50/win</span>
-          </p>
         </div>
         <div class="form-card">
           <h2>Add Player</h2>
-          <div class="field"><label>Player Name</label><input type="text" id="player-name" placeholder="Enter name…"></div>
-          <div class="field"><label>Player # (00–99)</label><input type="number" id="player-num" placeholder="07" min="0" max="99" style="width:100px"></div>
-          <button class="btn" id="add-player-btn" onclick="addPlayer()">Add Player</button>
+          <div class="field"><label>Name</label><input type="text" id="player-name-in"></div>
+          <div class="field"><label>Number (00-99)</label><input type="number" id="player-num-in" min="0" max="99"></div>
+          <button class="btn" onclick="addPlayer()">Add Player</button>
           <div class="msg" id="player-msg"></div>
-        </div>
-        <div class="form-card" id="player-list-card">
-          <h2>Players</h2>
-          <div id="player-list-inner"><div class="loading">Loading…</div></div>
         </div>
       </div>
       <div class="matches-main">
-        <div class="hist-filters">
-          <select id="history-filter" onchange="renderHistory()"><option value="all">All Players</option></select>
-        </div>
-        <div id="history-list"><div class="loading">Loading matches</div></div>
+        <div id="history-list"></div>
       </div>
     </div>
   </div>
 
   <div id="panel-brackets" class="panel">
-    <div style="width:100%">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.08em;color:var(--text)">Active Tournaments</div>
-        <div id="tourn-header-btn"></div>
-      </div>
-      <div id="tourn-countdown-banner" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2rem 1rem;text-align:center;margin-bottom:1.25rem;">
-        <div style="font-size:2rem;margin-bottom:.4rem">🔒</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Tournament Bracket Starts In</div>
-        <div id="tourn-countdown-timer" style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:.06em;color:var(--accent);line-height:1"></div>
-        <div id="tourn-countdown-name" style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--muted);margin-top:.5rem;letter-spacing:.06em"></div>
-      </div>
-      <div id="brackets-list"><div class="empty">No active tournaments. Create one to get started.</div></div>
-      <div style="margin-top:2.5rem;border-top:1px solid var(--border);padding-top:1.75rem">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.08em;color:var(--text);margin-bottom:1.25rem">Past Tournaments</div>
-        <div id="past-tournaments-list"><div class="empty">No completed tournaments yet.</div></div>
-      </div>
-    </div>
+    <div id="brackets-list"></div>
   </div>
 
   <div id="panel-admin" class="panel">
     <div style="max-width:520px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.08em;color:var(--admin);margin-bottom:1.5rem">Admin Settings</div>
-
-      <div class="admin-section">
-        <div class="admin-stitle">Tournament Deadline</div>
-        <div class="form-card" style="border-color:rgba(229,178,93,.3)">
-          <div class="field"><label>Tournament Name</label><input type="text" id="tourn-name-input" placeholder="e.g. TTTIW Championship"></div>
-          <div class="field"><label>Deadline</label><input type="datetime-local" id="tourn-deadline-input"></div>
-          <div class="field"><label>Top N Players (4–16)</label><input type="number" id="tourn-top-n" value="8" min="4" max="16" step="1" style="width:100px"></div>
-          <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-            <button class="btn" onclick="saveTournDeadline()">Save Deadline</button>
-            <button class="btn-ghost" onclick="clearTournDeadline()" style="font-size:.62rem">Clear</button>
-            <button class="btn-admin" onclick="fireAutoTournament()" style="font-size:.62rem">⚡ Create Now</button>
-          </div>
-          <div class="msg" id="tourn-deadline-msg"></div>
-        </div>
-      </div>
-
       <div class="admin-section">
         <div class="admin-stitle">Scoring Rules</div>
-        <div class="form-card" style="border-color:rgba(201,160,220,.25)">
-          <div class="field"><label>Win Points</label><input type="number" id="scoring-win" min="0" value="500"></div>
-          <div class="field"><label>Loss Points</label><input type="number" id="scoring-loss" min="0" value="300"></div>
-          <div class="field"><label>Streak Bonus</label><input type="number" id="scoring-streak" min="0" value="50"></div>
-          <button class="btn-admin" onclick="saveScoring()">Save Scoring Rules</button>
-          <div class="msg" id="scoring-msg"></div>
+        <div class="form-card">
+          <div class="field"><label>Win Points</label><input type="number" id="scoring-win"></div>
+          <div class="field"><label>Loss Points</label><input type="number" id="scoring-loss"></div>
+          <div class="field"><label>Streak Bonus</label><input type="number" id="scoring-streak"></div>
+          <button class="btn-admin" onclick="saveScoring()">Save Rules</button>
         </div>
       </div>
-
       <div class="admin-section">
-        <div class="admin-stitle" style="color:var(--loss)">Danger Zone</div>
-        <div class="form-card" style="border-color:rgba(217, 83, 79, 0.2)">
-          <p style="font-family: 'DM Mono', monospace; font-size: .58rem; color: var(--muted); margin-bottom: .6rem">
-            Wipe all players, matches, and tournament history. <br>
-            <strong style="color: var(--loss)">Scoring rules and deadlines will be kept.</strong>
-          </p>
-          <button class="btn-danger" onclick="resetAllData()" style="width: 100%; padding: .6rem">Reset All Data</button>
+        <div class="admin-stitle">Danger Zone</div>
+        <div class="form-card" style="border-color:rgba(217,83,79,.3)">
+           <button class="btn-danger" style="width:100%" onclick="resetAllData()">Reset All Data</button>
+           <p style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--muted);margin-top:.75rem;text-align:center;">Deletes all players and matches. Preserves scoring config.</p>
         </div>
       </div>
     </div>
   </div>
-
 </main>
 
 <script>
-let players = JSON.parse(localStorage.getItem('players') || '[]');
-let matches = JSON.parse(localStorage.getItem('matches') || '[]');
-let deviceMatches = JSON.parse(localStorage.getItem('device_matches') || '[]');
-let scoring = JSON.parse(localStorage.getItem('config/scoring') || '{"winPts":500,"lossPts":300,"streakBonus":50}');
-let tournDeadline = JSON.parse(localStorage.getItem('config/tournDeadline') || 'null');
-let brackets = [];
-let pastTournaments = [];
-let isAdmin = localStorage.getItem('admin_session') === 'true';
+let players = [];
+let matches = [];
+let scoring = { winPts: 500, lossPts: 300, streakBonus: 50 };
+let isAdmin = false;
+
+async function loadData() {
+  players = JSON.parse(localStorage.getItem('players') || '[]');
+  matches = JSON.parse(localStorage.getItem('matches') || '[]');
+  const savedScoring = localStorage.getItem('config/scoring');
+  if (savedScoring) scoring = JSON.parse(savedScoring);
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const list = document.getElementById('lb-list');
+  list.innerHTML = '';
+  document.getElementById('lb-loading').style.display = 'none';
+  document.getElementById('lb-table').style.display = 'block';
+
+  players.sort((a,b) => b.points - a.points).forEach((p, idx) => {
+    const row = _lbCreateEl(p, idx);
+    list.appendChild(row);
+  });
+}
+
+function _lbCreateEl(p, idx) {
+  const row = document.createElement('div');
+  row.className = 'lb-row';
+  row.style.setProperty('--ty', (idx * 60) + 'px');
+  row.style.transform = `translateY(${idx * 60}px)`;
+
+  const rank = document.createElement('div');
+  rank.className = 'rank';
+  rank.textContent = idx + 1;
+
+  const nameCell = document.createElement('div');
+  nameCell.className = 'pname-cell';
+  const badge = document.createElement('span');
+  badge.className = 'lb-num-badge'; // Fixed class name for retrieval
+  badge.textContent = p.number || '??';
+  badge.style.cssText = "font-family:'DM Mono'; font-size:.6rem; color:var(--muted); border:1px solid var(--border); padding:2px 4px; border-radius:2px;";
+  
+  const name = document.createElement('div');
+  name.className = 'player-name';
+  name.textContent = p.name;
+
+  nameCell.appendChild(badge);
+  nameCell.appendChild(name);
+
+  const pts = document.createElement('div');
+  pts.className = 'lb-col-pts pts-val';
+  pts.textContent = p.points;
+
+  const wl = document.createElement('div');
+  wl.className = 'lb-col-wl record-badge';
+  wl.innerHTML = `<span class="w">${p.wins}W</span><span class="l">${p.losses}L</span>`;
+
+  row.appendChild(rank);
+  row.appendChild(nameCell);
+  row.appendChild(pts);
+  row.appendChild(wl);
+  return row;
+}
+
+function resetAllData() {
+  if (!confirm("Are you sure? This will permanently delete ALL players and match history.")) return;
+  
+  // Clear core data
+  localStorage.removeItem('players');
+  localStorage.removeItem('matches');
+  localStorage.removeItem('device_matches');
+  
+  // Clear tournament configs
+  localStorage.removeItem('config/brackets');
+  localStorage.removeItem('config/pastTournaments');
+  
+  // Reset local state
+  players = [];
+  matches = [];
+  
+  alert("Database reset successful.");
+  location.reload();
+}
+
+function openAdminLogin() {
+  const pass = prompt("Admin Password:");
+  if (pass === 'tttiw123') {
+    isAdmin = true;
+    document.getElementById('admin-tab-btn').style.display = 'block';
+    document.getElementById('admin-btn').classList.add('on');
+    alert("Logged in as Admin");
+  }
+}
 
 function showPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  if (id === 'leaderboard') renderLeaderboard();
-  if (id === 'matches') { renderMatchesForm(); renderHistory(); }
-  if (id === 'brackets') renderBrackets();
+  btn.classList.add('active');
 }
 
-async function resetAllData() {
-  if (!confirm("ARE YOU SURE? This will permanently delete all players, matches, and tournament records.")) return;
-  if (!confirm("LAST WARNING: This cannot be undone. Proceed with full reset?")) return;
-  
-  const wipeKeys = ['players', 'matches', 'device_matches', 'config/brackets', 'config/pastTournaments'];
-  wipeKeys.forEach(key => localStorage.removeItem(key));
-  
-  alert("Data wiped. Reloading application...");
-  window.location.reload();
-}
-
-function _lbCreateEl(p, rank, total) {
-  const row = document.createElement('div');
-  row.className = 'lb-row' + (rank < 3 ? ' is-rank-' + rank : '');
-  row.style.setProperty('--ty', (rank * 60) + 'px');
-  
-  const bar = document.createElement('div');
-  bar.className = 'lb-bar';
-  row.appendChild(bar);
-
-  const colRank = document.createElement('div');
-  colRank.className = 'rank' + (rank < 3 ? ' top' + (rank + 1) : '');
-  colRank.textContent = rank + 1;
-  row.appendChild(colRank);
-
-  const colName = document.createElement('div');
-  colName.className = 'pname-cell';
-  
-  const av = document.createElement('div');
-  av.className = 'lb-av-ph' + (rank < 3 ? ' av-rank-' + rank : '');
-  av.style.backgroundColor = 'rgba(225,226,239,0.05)';
-  av.textContent = p.name.substring(0, 1).toUpperCase();
-  colName.appendChild(av);
-
-  const nameSpan = document.createElement('span');
-  nameSpan.className = 'player-name';
-  nameSpan.textContent = p.name;
-  colName.appendChild(nameSpan);
-
-  const numBadge = document.createElement('span');
-  numBadge.className = 'lb-num-badge'; // ADDED FIX
-  numBadge.textContent = '#' + (p.num || '??');
-  colName.appendChild(numBadge);
-
-  row.appendChild(colName);
-
-  const colPts = document.createElement('div');
-  colPts.className = 'lb-col-pts';
-  const ptsVal = document.createElement('span');
-  ptsVal.className = 'pts-val';
-  ptsVal.textContent = p.points.toLocaleString();
-  colPts.appendChild(ptsVal);
-  row.appendChild(colPts);
-
-  const colWL = document.createElement('div');
-  colWL.className = 'lb-col-wl record-badge';
-  colWL.innerHTML = `<span class="w">${p.wins}W</span><span class="l">${p.losses}L</span>`;
-  row.appendChild(colWL);
-
-  return row;
-}
-
-// ... Rest of your existing functions (renderLeaderboard, saveScoring, etc.) ...
-// Ensure they use the global variables and sync to localStorage.
+loadData();
 </script>
 </body>
 </html>
