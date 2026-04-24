@@ -896,16 +896,7 @@ window.adminRemovePlayer=async function(fid,name){
 
 window.adminResetAll=async function(){
   if(!isAdmin)return;
-  if(!confirm('RESET ALL DATA?
-
-This will permanently delete:
-• All players
-• All matches
-• All tournaments & brackets
-
-Scoring rules and tournament deadline will be kept.
-
-This cannot be undone.'))return;
+  if(!confirm('RESET ALL DATA?\n\nThis will permanently delete:\n- All players\n- All matches\n- All tournaments & brackets\n\nScoring rules and tournament deadline will be kept.\n\nThis cannot be undone.'))return;
   const btn=document.querySelector('[onclick="adminResetAll()"]');
   if(btn)btn.disabled=true;
   showMsg('reset-all-msg','Resetting…');
