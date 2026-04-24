@@ -969,11 +969,14 @@ let _pendingDeviceMatches=[];
 async function _processDeviceMatch(docSnap){
   const m=docSnap.data();
   if(m.processed)return;
-  const winner=players.find(p=>p.playerNum===m.winnerNum);
-  const loser =players.find(p=>p.playerNum===m.loserNum);
+  // Coerce to int — Firestore REST integerValue comes back as string, JS SDK as number
+  const winnerNum=parseInt(m.winnerNum,10);
+  const loserNum =parseInt(m.loserNum, 10);
+  const winner=players.find(p=>p.playerNum===winnerNum);
+  const loser =players.find(p=>p.playerNum===loserNum);
   if(!winner||!loser){
     if(!_pendingDeviceMatches.find(d=>d.id===docSnap.id))_pendingDeviceMatches.push(docSnap);
-    console.log('[device_matches] queued — player not found yet: #'+String(m.winnerNum).padStart(2,'0')+' vs #'+String(m.loserNum).padStart(2,'0'));
+    console.log('[device_matches] queued — player not found yet: #'+String(winnerNum).padStart(2,'0')+' vs #'+String(loserNum).padStart(2,'0'));
     return;
   }
   const wid=winner.firestoreId,lid=loser.firestoreId;
